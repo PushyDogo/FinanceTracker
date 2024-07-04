@@ -6,3 +6,6 @@ def create_expense(db: Session, expense: schemas.ExpenseCreate):
     db.commit()
     db.refresh(db_expense)
     return db_expense
+
+def get_expenses(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(models.Expense).offset(skip).limit(limit).all()

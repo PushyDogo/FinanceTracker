@@ -1,7 +1,8 @@
-from . import date, BaseModel
+from typing import Literal
+from pydantic import BaseModel
 
 class CategoryBase(BaseModel):
-    name: str
+    name: Literal['Food', 'Income', 'Housing']
 
 class CategoryCreate(CategoryBase):
     pass

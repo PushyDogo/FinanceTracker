@@ -1,7 +1,9 @@
 from . import models, schemas, Session
+from datetime import datetime
 
 def create_expense(db: Session, expense: schemas.ExpenseCreate):
     db_expense = models.Expense(**expense.dict())
+    db_expense.date = datetime.now().date()
     db.add(db_expense)
     db.commit()
     db.refresh(db_expense)

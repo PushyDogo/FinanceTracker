@@ -1,7 +1,13 @@
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app import crud, models, schemas
+from app.api.v1.endpoints import transactions
 from app.db.session import SessionLocal, engine
+import logging
+
+
+logger = logging.getLogger('uvicorn.error')
+logger.setLevel(logging.DEBUG)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -15,20 +21,31 @@ def get_db():
     finally:
         db.close()
 
-@app.post("/expenses/", response_model=schemas.expense.Expense)
+@app.post("/expenses/addexpense", response_model=schemas.Expense)
 def add_expense(expense: schemas.ExpenseCreate, db: Session = Depends(get_db)):
-    return crud.create_expense(db=db, expense=expense)
+    return transactions.add_expense(db=db, expense=expense)
 
-@app.post("/incomes/", response_model=schemas.Income)
+@app.post("/incomes/addincome", response_model=schemas.Income)
 def add_income(income: schemas.IncomeCreate, db: Session = Depends(get_db)):
-    return crud.create_income(db=db, income=income)
+    return transactions.add_income(db=db, income=income)
 
-@app.get("/expenses/category/{category_id}")
-def read_expenses_by_category(category_id: int, db: Session = Depends(get_db)):
-    expenses = crud.get_expenses_by_category(db, category_id=category_id)
+@app.get("/expenses", response_model=list[schemas.Expense])
+def read_expenses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    expenses = transactions.get_monthly_expenses(db, skip=skip, limit=limit)
     return expenses
 
-@app.get("/expenses/monthly/{category_id}")
-def read_monthly_expenses_by_category(category_id: int, month: int, year: int, db: Session = Depends(get_db)):
-    expenses = crud.get_monthly_expenses_by_category(db, category_id=category_id, month=month, year=year)
+@app.get("/incomes", response_model=list[schemas.Income])
+def read_incomes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    incomes = transactions.get_incomes(db, skip=skip, limit=limit)
+    return incomes
+
+@app.get("/expenses/monthly", response_model=list[schemas.Expense])
+def read_monthly_expenses(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    expenses = transactions.get_monthly_expenses(db, skip=skip, limit=limit)
     return expenses
+
+@app.get("/incomes/monthly", response_model=list[schemas.Income])
+def read_monthly_incomes(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    incomes = transactions.get_monthly_income(db, skip=skip, limit=limit)
+    return incomes
+
